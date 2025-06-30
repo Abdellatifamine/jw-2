@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Special Product Offer</title>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cormorant:ital,wght@0,300..700;1,300..700&family=Great+Vibes&family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&family=Montserrat:ital,wght@0,100..900;1,100..900&family=Noto+Sans+Tifinagh&family=Open+Sans:ital,wght@0,300..800;1,300..800&family=Rubik:ital,wght@0,300..900;1,300..900&family=Satisfy&display=swap');
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+     
+    }
+
+    .product-card {
+      text-align: center;
+      max-width: 400px;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .stock-number {
+      font-size: 56px;
+      font-weight: bold;
+      color: #d81717;
+      margin: 0 5px;
+      animation: pulse 1.5s infinite;
+
+    font-family: "Noto Sans Tifinagh", sans-serif;
+    font-weight: 400;
+    font-style: normal;
+      
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.15); }
+      100% { transform: scale(1); }
+    }
+
+    @keyframes popin {
+      from {
+        opacity: 0;
+        transform: scale(0.8);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="product-card">
+    <div id="stock-counter-container"></div>
+  </main>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const RANDOM_MIN_INITIAL = 49;
+      const RANDOM_MAX_INITIAL = 54;
+      const MINIMUM_STOCK = 35;
+      const RANDOM_DELAY_MIN_MS = 200000;
+      const RANDOM_DELAY_MAX_MS = 400000;
+
+      const counterContainer = document.getElementById('stock-counter-container');
+      let currentStock;
+      let timeoutId;
+      let initialStock;
+
+      function createWidget() {
+        const widget = document.createElement('div');
+        widget.className = 'stock-widget';
+        widget.innerHTML = `<span class="stock-number"></span> `;
+        counterContainer.innerHTML = '';
+        counterContainer.appendChild(widget);
+        return widget.querySelector('.stock-number');
+      }
+
+      const stockSpan = createWidget();
+
+      function updateDisplay() {
+        if (stockSpan) {
+          stockSpan.textContent = currentStock;
+        }
+      }
+
+      function startSlowCountdown() {
+        if (timeoutId) clearTimeout(timeoutId);
+
+        if (currentStock > MINIMUM_STOCK) {
+          const randomDelay = Math.random() * (RANDOM_DELAY_MAX_MS - RANDOM_DELAY_MIN_MS) + RANDOM_DELAY_MIN_MS;
+          timeoutId = setTimeout(() => {
+            currentStock--;
+            updateDisplay();
+            startSlowCountdown();
+          }, randomDelay);
+        }
+      }
+
+      const visitInfoString = localStorage.getItem('stockVisitInfo');
+
+      if (visitInfoString) {
+        const visitInfo = JSON.parse(visitInfoString);
+        initialStock = visitInfo.initialStock;
+        const timeElapsed = Date.now() - visitInfo.initialTimestamp;
+        const itemsSold = Math.floor(timeElapsed / 60000);
+        currentStock = initialStock - itemsSold;
+
+        if (currentStock < MINIMUM_STOCK) {
+          currentStock = MINIMUM_STOCK;
+        }
+
+        updateDisplay();
+        startSlowCountdown();
+      } else {
+        // Random number between 22 and 27
+        initialStock = Math.floor(Math.random() * (RANDOM_MAX_INITIAL - RANDOM_MIN_INITIAL + 1)) + RANDOM_MIN_INITIAL;
+        currentStock = initialStock;
+        updateDisplay();
+
+        localStorage.setItem('stockVisitInfo', JSON.stringify({
+          initialTimestamp: Date.now(),
+          initialStock: initialStock
+        }));
+
+        setTimeout(() => {
+          currentStock = initialStock - 1;
+          updateDisplay();
+          startSlowCountdown();
+        }, 3000);
+      }
+    });
+  </script>
+</body>
+</html>
